@@ -11,13 +11,13 @@ node {
     stage('Checkout') {
         checkout scm
     }
+    
     stage('Setup Maven') {
         // Get the installed Maven path by tool name
         def mvnHome = tool name: 'Default', type: 'hudson.tasks.Maven$MavenInstallation'
         env.PATH = "${mvnHome}/bin:${env.PATH}"
         echo "Using Maven at: ${mvnHome}"
     }
-
 
     stage('Build') {
         sh 'mvn clean compile'
@@ -41,10 +41,8 @@ node {
     stage('Run Forex App') {
         sh "java -cp target/forex-app-1.0.0.jar com.example.forex.ForexConverter rates.csv ${params.AMOUNT} ${params.CURRENCY}"
     }
-    
 
     stage('Get Agent Workspace and Copy files for Docker Host') {
-        steps {
         script {
             def agentName = 'agent01'
             def node = Jenkins.instance.getNode(agentName)
@@ -64,9 +62,6 @@ node {
                 error("Agent '${agentName}' not found")
             }
         }
-    }
-}
-        
     }
 
     stage('Docker Build & Run') {
