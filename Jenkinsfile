@@ -41,16 +41,20 @@ node {
     }
 
     stage('Prepare Workspace Path') {
-        script {
-            def agentName = 'agent01'
-            def node = Jenkins.instance.getNode(agentName)
-            if (node) {
-                def base = node.remoteFS.endsWith('/') ? node.remoteFS : node.remoteFS + '/'
-                def agentWorkspace = "${base}workspace/${env.JOB_NAME}/"
-                env.AGENT_WORKSPACE = agentWorkspace
-            } else {
-                error("Agent '${agentName}' not found")
-            }
+        node('master') {
+    // Determine the agent workspace path dynamically
+    def agentName = 'agent01'
+    def agentWorkspace = null
+    stage('Determine agent workspace') {
+        def nodeObj = Jenkins.instance.getNode(agentName)
+        if (nodeObj) {
+            def base = nodeObj.remoteFS.endsWith('/') ? nodeObj.remoteFS : nodeObj.remoteFS + '/'
+            agentWorkspace = "${base}workspace/${env.JOB_NAME}/"
+            // Store to env for safe use in sh
+            env.AGENT_WORKSPACE = agentWorkspace
+            echo "Workspace path for ${agentName}: ${env.AGENT_WORKSPACE}"
+        } else {
+            error("Agent '${agentName}' not found")
         }
     }
 
